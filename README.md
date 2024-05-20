@@ -4,13 +4,15 @@
 
 ### 프로젝트 구조
 
+```
 📦src
-┣ 📂data
-┃ ┗ 📜mariadb.js
-┣ 📂routes
-┃ ┣ 📜books.js
-┃ ┣ 📜carts.js
-┃ ┣ 📜likes.js
-┃ ┣ 📜orders.js
-┃ ┗ 📜users.js
-┗ 📜app.js
+ ┣ 📂data
+ ┃ ┗ 📜mariadb.js
+ ┣ 📂routes
+ ┃ ┣ 📜books.js
+ ┃ ┣ 📜carts.js
+ ┃ ┣ 📜likes.js
+ ┃ ┣ 📜orders.js
+ ┃ ┗ 📜users.js
+ ┗ 📜app.js
+```
