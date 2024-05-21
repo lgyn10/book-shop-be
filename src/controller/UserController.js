@@ -11,6 +11,7 @@ const join = (req, res) => {
   const sql = `insert into users (email, password) values ('${email}','${password}')`;
   conn.query(sql, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     if (results.affectedRows > 0) {
       res.status(StatusCodes.CREATED).json(`${email}님, 회원가입에 성공했습니다!`);
     }
@@ -23,7 +24,7 @@ const login = (req, res) => {
   const { email, password } = req.body;
   const sql = `SELECT * FROM users where email = ?`;
   conn.query(sql, [email], (error, results) => {
-    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     // 로직
     const loginUser = results[0];
     if (loginUser && loginUser.password === password) {
@@ -48,7 +49,7 @@ const passwordResetReq = (req, res) => {
   const email = req.body.email;
   const sql = `SELECT * FROM users where email = ?`;
   conn.query(sql, [email], (error, results) => {
-    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message }).end();
+    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error }).end();
     const userResult = results[0];
     if (userResult) {
       res.status(StatusCodes.OK).json({ message: `사용자 정보가 확인되었습니다`, email: userResult.email }).end();
@@ -64,7 +65,7 @@ const passwordReset = (req, res) => {
   const sql = `update users set password = ? where email = ?`;
   const values = [password, email];
   conn.query(sql, values, (error, results) => {
-    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message }).end();
+    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error }).end();
     if (results.affectedRows > 0) {
       res.status(StatusCodes.OK).json({ message: `비밀번호 변경을 완료했습니다.` }).end();
     } else {
