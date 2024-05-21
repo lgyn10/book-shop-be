@@ -4,13 +4,18 @@ const { StatusCodes } = require('http-status-codes'); // http-status-codes 라�
 const jwt = require('jsonwebtoken');
 require('dotenv').config(); // .env 파일 사용
 require('cookie-parser');
+// 암호화 모듈
+const crypto = require('crypto');
 
 //! 회원가입
 const join = (req, res) => {
   const { email, password } = req.body;
-  const sql = `insert into users (email, password) values ('${email}','${password}')`;
-  conn.query(sql, (error, results) => {
-    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  // password 암호화
+  const salt = crypto.randomBytes(25).toString('base64');
+  const hashPassword = crypto.pbkdf2Sync(password, salt, 10000, 25, 'sha512').toString('base64');
+  const sql = `insert into users (email, password, salt) values (?, ?, ?)`;
+  const values = [email, hashPassword, salt];
+  conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     if (results.affectedRows > 0) {
       res.status(StatusCodes.CREATED).json(`${email}님, 회원가입에 성공했습니다!`);
@@ -27,7 +32,9 @@ const login = (req, res) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     // 로직
     const loginUser = results[0];
-    if (loginUser && loginUser.password === password) {
+    // 비밀번호 암호화
+    const hashPassword = crypto.pbkdf2Sync(password, loginUser.salt, 10000, 25, 'sha512').toString('base64');
+    if (loginUser && loginUser.password === hashPassword) {
       // jwt 토큰 발행
       const token = jwt.sign({ email: loginUser.email }, process.env.JWT_PRIVATE_KEY, {
         expiresIn: '15m',
@@ -62,8 +69,11 @@ const passwordResetReq = (req, res) => {
 //! 비밀번호 수정 실행
 const passwordReset = (req, res) => {
   const { email, password } = req.body;
-  const sql = `update users set password = ? where email = ?`;
-  const values = [password, email];
+  // 비밀번호 암호화
+  const salt = crypto.randomBytes(25).toString('base64');
+  const hashPassword = crypto.pbkdf2Sync(password, salt, 10000, 25, 'sha512').toString('base64');
+  const sql = `update users set password = ?, salt =? where email = ?`;
+  const values = [hashPassword, salt, email];
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error }).end();
     if (results.affectedRows > 0) {
