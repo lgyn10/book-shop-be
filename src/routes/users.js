@@ -8,10 +8,24 @@ require('dotenv').config();
 require('cookie-parser');
 
 //! 회원가입
-router.post('/join', (req, res) => {
-  const { email, password } = req.body;
-  res.json({ email, password });
-});
+router.post(
+  '/join',
+  [
+    body('email').notEmpty().isEmail().withMessage('email 형식이 아닙니다.'),
+    body('password').notEmpty().withMessage('비밀번호를 입력하세요.').isString(),
+    validateErrHandler,
+  ],
+  (req, res) => {
+    const { email, password } = req.body;
+    const sql = `insert into users (email, password) values ('${email}','${password}')`;
+    conn.query(sql, (error, results) => {
+      if (error) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+      }
+      res.status(StatusCodes.CREATED).json(`${email}님, 회원가입에 성공했습니다!`);
+    });
+  }
+);
 
 //! 로그인
 router.post('/login', (req, res) => {
