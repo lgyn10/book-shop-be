@@ -14,7 +14,6 @@ const join = (req, res) => {
     if (results.affectedRows > 0) {
       res.status(StatusCodes.CREATED).json(`${email}님, 회원가입에 성공했습니다!`);
     }
-    res.status(StatusCodes.CREATED).json(`${email}님, 회원가입에 성공했습니다!`);
     console.log(results);
   });
 };
@@ -58,3 +57,20 @@ const passwordResetReq = (req, res) => {
     }
   });
 };
+
+//! 비밀번호 수정 실행
+const passwordReset = (req, res) => {
+  const { email, password } = req.body;
+  const sql = `update users set password = ? where email = ?`;
+  const values = [password, email];
+  conn.query(sql, values, (error, results) => {
+    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message }).end();
+    if (results.affectedRows > 0) {
+      res.status(StatusCodes.OK).json({ message: `비밀번호 변경을 완료했습니다.` }).end();
+    } else {
+      res.status(StatusCodes.BAD_REQUEST).json(results).end();
+    }
+  });
+};
+
+module.exports = { join, login, passwordResetReq, passwordReset };
