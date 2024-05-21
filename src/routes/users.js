@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
 router.use(express.json());
-// mariadb 연동
-const conn = require('data/mariadb');
 // 유효성 검사 라이브러리
 const { body, param, validationResult } = require('express-validator');
 // jwt, cookie 설정
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 require('cookie-parser');
-// http-status-codes 라이브러리
-const { StatusCodes } = require('http-status-codes');
+// UserController
+const userController = require('controller/UserController');
 
 // 유효성 검사 예외 처리 모듈
 const validateErrHandler = (req, res, next) => {
@@ -29,16 +27,7 @@ router.post(
     body('password').notEmpty().withMessage('비밀번호를 입력하세요.').isString(),
     validateErrHandler,
   ],
-  (req, res) => {
-    const { email, password } = req.body;
-    const sql = `insert into users (email, password) values ('${email}','${password}')`;
-    conn.query(sql, (error, results) => {
-      if (error) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
-      }
-      res.status(StatusCodes.CREATED).json(`${email}님, 회원가입에 성공했습니다!`);
-    });
-  }
+  userController.join
 );
 
 //! 로그인
