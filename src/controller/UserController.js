@@ -43,3 +43,18 @@ const login = (req, res) => {
     }
   });
 };
+
+//! 비밀번호 수정 요청
+const passwordResetReq = (req, res) => {
+  const email = req.body.email;
+  const sql = `SELECT * FROM users where email = ?`;
+  conn.query(sql, [email], (error, results) => {
+    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message }).end();
+    const userResult = results[0];
+    if (userResult) {
+      res.status(StatusCodes.OK).json({ message: `사용자 정보가 확인되었습니다`, email: userResult.email }).end();
+    } else {
+      res.status(StatusCodes.UNAUTHORIZED).json({ message: `사용자 정보가 없습니다.` }).end();
+    }
+  });
+};
