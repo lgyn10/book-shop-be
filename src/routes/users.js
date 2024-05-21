@@ -1,11 +1,25 @@
 const express = require('express');
 const router = express.Router();
 router.use(express.json());
-
+// mariadb 연동
+const conn = require('data/mariadb');
+// 유효성 검사 라이브러리
+const { body, param, validationResult } = require('express-validator');
+// jwt, cookie 설정
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-// 쿠키 모듈 주입
 require('cookie-parser');
+// http-status-codes 라이브러리
+const { StatusCodes } = require('http-status-codes');
+
+// 유효성 검사 예외 처리 모듈
+const validateErrHandler = (req, res, next) => {
+  const err = validationResult(req);
+  if (err.isEmpty()) {
+    return next();
+  }
+  return res.status(400).json({ message: err.errors });
+};
 
 //! 회원가입
 router.post(
