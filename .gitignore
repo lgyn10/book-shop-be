@@ -21,5 +21,3 @@ node_modules/
 Thumbs.db
 
 .env
-
-pnpm-lock.yaml
