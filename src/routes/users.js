@@ -3,11 +3,9 @@ const router = express.Router();
 router.use(express.json());
 // 유효성 검사 라이브러리
 const { body, param, validationResult } = require('express-validator');
-// jwt, cookie 설정
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-require('cookie-parser');
+
 // UserController
+// const { join, login, passwordResetReq, passwordReset } = require('controller/UserController');
 const userController = require('controller/UserController');
 
 // 유효성 검사 예외 처리 모듈
@@ -31,24 +29,12 @@ router.post(
 );
 
 //! 로그인
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  const token = jwt.sign({ email, password }, process.env.JWT_PRIVATE_KEY, {
-    expiresIn: '15m',
-    issuer: 'changyunlee',
-  });
-  res.cookie('token', token, { httpOnly: true });
-  res.json('로그인');
-});
+router.post('/login', userController.login);
 
 //! 비밀번호 초기화 요청
-router.post('/reset', (req, res) => {
-  res.json('초기화');
-});
+router.post('/reset', userController.passwordResetReq);
 
 //! 비밀번호 초기화 실행
-router.put('/reset', (req, res) => {
-  res.json('초기화 실행');
-});
+router.put('/reset', userController.passwordReset);
 
 module.exports = router;
