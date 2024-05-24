@@ -18,14 +18,40 @@ const allBooks = (req, res) => {
   // news : string -> boolean 형 변환
   const parsedNews = JSON.parse(news ?? false);
 
-    // 요약된 도서 리스트
-    // const sql = 'select id, title, summary, author, price, pub_date from books';
-    const sql = 'select * from books';
-    conn.query(sql, (error, results) => {
-      if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
-      return res.status(StatusCodes.OK).json(results);
-    });
+  // 전체 조회
+  let sql = `select * from books`;
+  let values = [];
+
+  //| 조건 분기
+
+  //! 카테고리별 + 신간 도서 조회
+  if (parsedcategoryId && parsedNews) {
+    // sql문 더할 때, 공백 처리 필수
+    sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
+    values = [...values, parsedcategoryId];
+  } else if (parsedcategoryId) {
+    //! 카테고리별 도서 조회
+    sql += ` where category_id = ?`;
+    values = [...values, parsedcategoryId];
+  } else if (parsedcategoryId) {
+    //! 신간 도서 조회
+    sql += ` where pub_date
+      between DATE_SUB(NOW(), interval 1 month) and NOW()`;
   }
+  // 페이지네이션
+  if (parsedLimit && parsedCurPage) {
+    sql += ` limit ? offset ?`;
+    values = [...values, parsedLimit, offset];
+  }
+
+  conn.query(sql, values, (error, results) => {
+    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    if (results.length) {
+      return res.status(StatusCodes.OK).json(results);
+    } else {
+      return res.status(StatusCodes.NOT_FOUND).end();
+    }
+  });
 };
 
 //! 개별 도서 조회
