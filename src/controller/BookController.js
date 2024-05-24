@@ -31,7 +31,10 @@ const allBooks = (req, res) => {
 //! 개별 도서 조회
 const bookDetail = (req, res) => {
   const id = parseInt(req.params.id);
-  const sql = 'select * from books where id = ?';
+  const sql = `select b.*, c.name AS category_name from books as b
+  left join category as c
+  on b.category_id = c.id
+  where b.id = ?`;
   const values = [id];
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
