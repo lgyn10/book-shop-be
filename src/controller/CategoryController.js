@@ -3,7 +3,7 @@ const { StatusCodes } = require('http-status-codes'); // http-status-codes 라�
 require('dotenv').config(); // .env 파일 사용
 
 //! 카테고리 전체 조회
-const allcategories = (req, res) => {
+const allcategory = (req, res) => {
   const sql = 'select * from category';
   conn.query(sql, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
@@ -11,4 +11,4 @@ const allcategories = (req, res) => {
   });
 };
 
-module.exports = { allcategories };
+module.exports = { allcategory };
