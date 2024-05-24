@@ -33,7 +33,7 @@ const allBooks = (req, res) => {
     //! 카테고리별 도서 조회
     sql += ` where category_id = ?`;
     values = [...values, parsedcategoryId];
-  } else if (parsedcategoryId) {
+  } else if (parsedNews) {
     //! 신간 도서 조회
     sql += ` where pub_date
       between DATE_SUB(NOW(), interval 1 month) and NOW()`;
