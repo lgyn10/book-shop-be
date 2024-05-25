@@ -19,7 +19,10 @@ const allBooks = (req, res) => {
   const parsedNews = JSON.parse(news ?? false);
 
   // 전체 조회
-  let sql = `select * from books`;
+  let sql = `select *, 
+  (SELECT count(*) FROM likes where liked_book_id = id) as likes,
+  (SELECT EXISTS (SELECT * FROM likes WHERE user_id = user_id and liked_book_id = id)) as liked
+  from books`;
   let values = [];
 
   //| 조건 분기
@@ -54,14 +57,18 @@ const allBooks = (req, res) => {
   });
 };
 
-//! 개별 도서 조회
+//! 개별 도서 조회 - 일단 로그인이 되었다는 가정이 전제함
 const bookDetail = (req, res) => {
-  const id = parseInt(req.params.id);
-  const sql = `select b.*, c.name AS category_name from books as b
+  const bookId = parseInt(req.params.id);
+  const { userId } = req.body;
+  const sql = `select b.*, c.name AS category_name,
+  (SELECT count(*) FROM likes where liked_book_id = b.id) as likes,
+  (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? and liked_book_id = b.id)) as liked
+  from books as b
   left join category as c
   on b.category_id = c.id
   where b.id = ?`;
-  const values = [id];
+  const values = [userId, bookId];
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     if (results.length) {
