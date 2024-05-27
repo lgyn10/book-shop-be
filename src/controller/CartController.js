@@ -18,16 +18,23 @@ const addCartItem = (req, res) => {
   });
 };
 
-//! 장바구니 도서 전체 조회
+//! 장바구니 도서 전체 조회 + 장바구니에서 선택한 도서 조회
 const getCartItems = (req, res) => {
-  const { userId } = req.body;
+  const { userId, selected } = req.body;
   const parsedUserId = parseInt(userId, 10);
+  const parsedSelected = selected.map(Number);
 
-  const sql = `SELECT b.*, ci.id as cart_items_id, ci.quantity
+  let sql = `SELECT b.*, ci.id as cart_items_id, ci.quantity
   FROM books AS b
   LEFT JOIN cart_items AS ci ON b.id = ci.book_id
-  WHERE ci.user_id = ?;`;
-  const values = [parsedUserId];
+  WHERE ci.user_id = ?`;
+  let values = [parsedUserId];
+
+  // 장바구니에서 선택한 도서 조회
+  if (selected.length > 0) {
+    sql += ` AND ci.id IN (?);`;
+    values = [...values, parsedSelected];
+  }
 
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
@@ -47,7 +54,4 @@ const deleteCartItem = (req, res) => {
   });
 };
 
-//! 장바구니에서 선택한 주문 도서 목록 조회
-const getSelectedCartItems = (req, res) => {};
-
-module.exports = { addCartItem, getCartItems, deleteCartItem, getSelectedCartItems };
+module.exports = { addCartItem, getCartItems, deleteCartItem };
