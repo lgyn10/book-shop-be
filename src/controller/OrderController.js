@@ -15,8 +15,6 @@ const order = async (req, res) => {
   });
 
   const { items, delivery, totalPrice, totalQuantity, userId, representBookTitle } = req.body;
-  let delivery_id;
-  let order_id;
 
   //| 1. delivery 테이블 삽입
   const sql1 = `INSERT INTO delivery (address, receiver, contact) 
@@ -80,6 +78,27 @@ const getOrders = async (req, res) => {
 };
 
 //! 주문 상세 상품 조회
-const getOrderDetail = (req, res) => {};
+const getOrderDetail = async (req, res) => {
+  // 비동기 전처리
+  const conn = await mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: process.env.MYSQL_PRIVATE_KEY, // pwd 추가
+    database: 'BookShop',
+    dateStrings: true, // 변경해줘야 time_zone 설정이 적용된 시간을 얻을 수 있다.
+  });
+
+  const id = req.params.id;
+  const parsedOrderId = parseInt(id, 10);
+
+  const sql = `SELECT ob.*, b.* FROM ordered_book as ob
+  LEFT JOIN books as b
+  ON ob.book_id = b.id
+  WHERE ob.order_id = ?
+  `;
+  const values = [parsedOrderId];
+  const [rows, fileds] = await conn.query(sql, values);
+  return res.status(StatusCodes.OK).json(rows);
+};
 
 module.exports = { order, getOrders, getOrderDetail };
