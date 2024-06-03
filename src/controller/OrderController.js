@@ -56,7 +56,28 @@ const order = async (req, res) => {
 };
 
 //! 주문 목록 조회
-const getOrders = (req, res) => {};
+const getOrders = async (req, res) => {
+  // 비동기 전처리
+  const conn = await mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: process.env.MYSQL_PRIVATE_KEY, // pwd 추가
+    database: 'BookShop',
+    dateStrings: true, // 변경해줘야 time_zone 설정이 적용된 시간을 얻을 수 있다.
+  });
+
+  const { userId } = req.body;
+  const parsedUserId = parseInt(userId, 10);
+
+  const sql = `SELECT o.*, d.address, d.receiver, d.contact FROM orders as o
+  LEFT JOIN delivery as d
+  ON o.delivery_id = d.id
+  WHERE o.user_id = ?`;
+  const values = [parsedUserId];
+
+  const [results] = await conn.query(sql, values);
+  return res.status(StatusCodes.OK).json(results);
+};
 
 //! 주문 상세 상품 조회
 const getOrderDetail = (req, res) => {};
