@@ -36,8 +36,8 @@ const login = (req, res) => {
     const hashPassword = crypto.pbkdf2Sync(password, loginUser.salt, 10000, 25, 'sha512').toString('base64');
     if (loginUser && loginUser.password === hashPassword) {
       // jwt 토큰 발행
-      const token = jwt.sign({ email: loginUser.email }, process.env.JWT_PRIVATE_KEY, {
-        expiresIn: '15m',
+      const token = jwt.sign({ email: loginUser.email, userId: loginUser.id }, process.env.JWT_PRIVATE_KEY, {
+        expiresIn: '300m',
         issuer: 'changyunlee',
       });
       // 쿠키 발행

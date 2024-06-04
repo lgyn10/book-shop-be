@@ -1,16 +1,20 @@
+const jwt = require('jsonwebtoken'); // jwt 모듈 소환
+const dotenv = require('dotenv');
+dotenv.config();
 const conn = require('data/mariadb');
 const { StatusCodes } = require('http-status-codes'); // http-status-codes 라이브러리
 require('dotenv').config(); // .env 파일 사용
 
 //! 장바구니 도서 추가(담기)
 const addCartItem = (req, res) => {
-  const { userId, bookId, quantity } = req.body;
-  const parsedUserId = parseInt(userId, 10);
+  const authorization = ensureAuthorization(req);
+
+  const { bookId, quantity } = req.body;
   const parsedBookId = parseInt(bookId, 10);
   const parsedQuantity = parseInt(quantity, 10);
 
   const sql = `INSERT INTO cart_items (user_id, book_id, quantity) VALUES (?, ?, ?);`;
-  const values = [parsedUserId, parsedBookId, parsedQuantity];
+  const values = [authorization.userId, parsedBookId, parsedQuantity];
 
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
@@ -20,15 +24,16 @@ const addCartItem = (req, res) => {
 
 //! 장바구니 도서 전체 조회 + 장바구니에서 선택한 도서 조회
 const getCartItems = (req, res) => {
-  const { userId, selected } = req.body;
-  const parsedUserId = parseInt(userId, 10);
+  const authorization = ensureAuthorization(req);
+
+  const { selected } = req.body;
   const parsedSelected = selected.map(Number);
 
   let sql = `SELECT b.*, ci.id as cart_items_id, ci.quantity
   FROM books AS b
   LEFT JOIN cart_items AS ci ON b.id = ci.book_id
   WHERE ci.user_id = ?`;
-  let values = [parsedUserId];
+  let values = [authorization.userId];
 
   // 장바구니에서 선택한 도서 조회
   if (selected.length > 0) {
@@ -52,6 +57,16 @@ const deleteCartItem = (req, res) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     return res.status(StatusCodes.OK).json(results);
   });
+};
+
+// ensureAuthorization 함수
+const ensureAuthorization = (req) => {
+  // jwt 설정
+  const receivedJwt = req.headers['authorization'];
+  const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_PRIVATE_KEY);
+  console.log('receivedJwt: ', receivedJwt);
+  console.log('decodedJwt: ', decodedJwt);
+  return decodedJwt;
 };
 
 module.exports = { addCartItem, getCartItems, deleteCartItem };
