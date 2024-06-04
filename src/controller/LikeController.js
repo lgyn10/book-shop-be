@@ -7,7 +7,11 @@ require('dotenv').config(); // .env 파일 사용
 
 //! 좋아요 추가
 const addLike = (req, res) => {
-  const authorization = ensureAuthorization(req);
+  const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
+  }
 
   const { id: bookId } = req.params;
   const parsedBookId = parseInt(bookId);
@@ -22,12 +26,11 @@ const addLike = (req, res) => {
 
 //! 좋아요 취소
 const removeLike = (req, res) => {
-  try {
-    const authorization = ensureAuthorization(req);
-  } catch (err) {
-    return res.status(StatusCodes.UNAUTHORIZED).send(err);
+  const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
   }
-
   const { id: bookId } = req.params;
   const parsedBookId = parseInt(bookId);
 
@@ -41,12 +44,17 @@ const removeLike = (req, res) => {
 };
 
 // ensureAuthorization 함수
-const ensureAuthorization = (req) => {
-  const receivedJwt = req.headers['authorization'];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_PRIVATE_KEY);
-  console.log('receivedJwt: ', receivedJwt);
-  console.log('decodedJwt: ', decodedJwt);
-  return decodedJwt;
+const ensureAuthorization = (req, res) => {
+  // jwt 설정
+  try {
+    const receivedJwt = req.headers['authorization'];
+    const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_PRIVATE_KEY);
+    console.log('receivedJwt: ', receivedJwt);
+    console.log('decodedJwt: ', decodedJwt);
+    return decodedJwt;
+  } catch (err) {
+    return err;
+  }
 };
 
 module.exports = { addLike, removeLike };

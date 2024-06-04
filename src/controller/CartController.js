@@ -8,6 +8,10 @@ require('dotenv').config(); // .env 파일 사용
 //! 장바구니 도서 추가(담기)
 const addCartItem = (req, res) => {
   const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
+  }
 
   const { bookId, quantity } = req.body;
   const parsedBookId = parseInt(bookId, 10);
@@ -25,8 +29,9 @@ const addCartItem = (req, res) => {
 //! 장바구니 도서 전체 조회 + 장바구니에서 선택한 도서 조회
 const getCartItems = (req, res) => {
   const authorization = ensureAuthorization(req, res);
-  if (authorization instanceof jwt.TokenExpiredError) {
-    return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
   }
 
   const { selected } = req.body;
