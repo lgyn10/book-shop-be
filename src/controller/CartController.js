@@ -7,7 +7,7 @@ require('dotenv').config(); // .env 파일 사용
 
 //! 장바구니 도서 추가(담기)
 const addCartItem = (req, res) => {
-  const authorization = ensureAuthorization(req);
+  const authorization = ensureAuthorization(req, res);
 
   const { bookId, quantity } = req.body;
   const parsedBookId = parseInt(bookId, 10);
@@ -24,7 +24,7 @@ const addCartItem = (req, res) => {
 
 //! 장바구니 도서 전체 조회 + 장바구니에서 선택한 도서 조회
 const getCartItems = (req, res) => {
-  const authorization = ensureAuthorization(req);
+  const authorization = ensureAuthorization(req, res);
 
   const { selected } = req.body;
   const parsedSelected = selected.map(Number);
@@ -60,13 +60,17 @@ const deleteCartItem = (req, res) => {
 };
 
 // ensureAuthorization 함수
-const ensureAuthorization = (req) => {
+const ensureAuthorization = (req, res) => {
   // jwt 설정
-  const receivedJwt = req.headers['authorization'];
-  const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_PRIVATE_KEY);
-  console.log('receivedJwt: ', receivedJwt);
-  console.log('decodedJwt: ', decodedJwt);
-  return decodedJwt;
+  try {
+    const receivedJwt = req.headers['authorization'];
+    const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_PRIVATE_KEY);
+    console.log('receivedJwt: ', receivedJwt);
+    console.log('decodedJwt: ', decodedJwt);
+    return decodedJwt;
+  } catch (err) {
+    return res.status(StatusCodes.UNAUTHORIZED).send(err);
+  }
 };
 
 module.exports = { addCartItem, getCartItems, deleteCartItem };
