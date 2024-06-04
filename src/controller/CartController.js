@@ -25,6 +25,9 @@ const addCartItem = (req, res) => {
 //! 장바구니 도서 전체 조회 + 장바구니에서 선택한 도서 조회
 const getCartItems = (req, res) => {
   const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.TokenExpiredError) {
+    return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+  }
 
   const { selected } = req.body;
   const parsedSelected = selected.map(Number);
@@ -69,7 +72,7 @@ const ensureAuthorization = (req, res) => {
     console.log('decodedJwt: ', decodedJwt);
     return decodedJwt;
   } catch (err) {
-    return res.status(StatusCodes.UNAUTHORIZED).send(err);
+    return err;
   }
 };
 
