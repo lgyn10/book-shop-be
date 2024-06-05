@@ -5,6 +5,8 @@ const conn = require('data/mariadb');
 const { StatusCodes } = require('http-status-codes'); // http-status-codes 라이브러리
 require('dotenv').config(); // .env 파일 사용
 
+const { ensureAuthorization } = require('util/index');
+
 //! 장바구니 도서 추가(담기)
 const addCartItem = (req, res) => {
   const authorization = ensureAuthorization(req, res);
