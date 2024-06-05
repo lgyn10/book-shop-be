@@ -1,6 +1,4 @@
 const jwt = require('jsonwebtoken'); // jwt 모듈 소환
-const dotenv = require('dotenv');
-dotenv.config();
 const conn = require('data/mariadb');
 const { StatusCodes } = require('http-status-codes'); // http-status-codes 라이브러리
 require('dotenv').config(); // .env 파일 사용
@@ -36,7 +34,8 @@ const getCartItems = (req, res) => {
     else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
   }
 
-  const { selected } = req.body;
+  let { selected } = req.body;
+  if (!selected) selected = []; // selected가 body에 담겨오지 않았을 때 에러 핸들링
   const parsedSelected = selected.map(Number);
 
   let sql = `SELECT b.*, ci.id as cart_items_id, ci.quantity
@@ -67,20 +66,6 @@ const deleteCartItem = (req, res) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     return res.status(StatusCodes.OK).json(results);
   });
-};
-
-// ensureAuthorization 함수
-const ensureAuthorization = (req, res) => {
-  // jwt 설정
-  try {
-    const receivedJwt = req.headers['authorization'];
-    const decodedJwt = jwt.verify(receivedJwt, process.env.JWT_PRIVATE_KEY);
-    console.log('receivedJwt: ', receivedJwt);
-    console.log('decodedJwt: ', decodedJwt);
-    return decodedJwt;
-  } catch (err) {
-    return err;
-  }
 };
 
 module.exports = { addCartItem, getCartItems, deleteCartItem };
