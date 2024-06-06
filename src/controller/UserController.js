@@ -10,6 +10,9 @@ const crypto = require('crypto');
 //! 회원가입
 const join = (req, res) => {
   const { email, password } = req.body;
+  // 빈 값 에러 핸들링 - 근데 유효성 검사 처리가 users.js에 되어 있음
+  if (!email || !password) return res.status(StatusCodes.BAD_REQUEST).send('이메일 또는 비밀번호를 입력하세요.');
+
   // password 암호화
   const salt = crypto.randomBytes(25).toString('base64');
   const hashPassword = crypto.pbkdf2Sync(password, salt, 10000, 25, 'sha512').toString('base64');
@@ -28,11 +31,16 @@ const join = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
   const sql = `SELECT * FROM users where email = ?`;
+
+  // 빈 값 에러 핸들링
+  if (!email || !password) return res.status(StatusCodes.BAD_REQUEST).send('이메일 또는 비밀번호를 입력하세요.');
+
   conn.query(sql, [email], (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     // 로직
     const loginUser = results[0];
     // 비밀번호 암호화
+    if (!loginUser?.salt) return res.status(StatusCodes.BAD_REQUEST).send('이메일 또는 비밀번호를 입력하세요.');
     const hashPassword = crypto.pbkdf2Sync(password, loginUser.salt, 10000, 25, 'sha512').toString('base64');
     if (loginUser && loginUser.password === hashPassword) {
       // jwt 토큰 발행
