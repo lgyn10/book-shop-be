@@ -78,18 +78,35 @@ const allBooks = async (req, res) => {
   }
 };
 
-//! 개별 도서 조회 - 일단 로그인이 되었다는 가정이 전제함
+//! 개별 도서 조회
 const bookDetail = (req, res) => {
+  const authorization = ensureAuthorization(req, res);
+
+  let sql;
+  let values;
+
   const bookId = parseInt(req.params.id);
-  const { userId } = req.body;
-  const sql = `select b.*, c.name AS category_name,
-  (SELECT count(*) FROM likes where liked_book_id = b.id) as likes,
-  (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? and liked_book_id = b.id)) as liked
-  from books as b
-  left join category as c
-  on b.category_id = c.id
-  where b.id = ?`;
-  const values = [userId, bookId];
+
+  if (authorization instanceof Error) {
+    // 비로그인 시 - liked을 뺀 요청값 리턴
+    sql = `select b.*, c.name AS category_name,
+   (SELECT count(*) FROM likes where liked_book_id = b.id) as likes 
+   from books as b
+   left join category as c
+   on b.category_id = c.id
+   where b.id = ?`;
+    values = [bookId];
+  } else {
+    // 로그인 시 - 유저의 liked를 포함한 요청값을 리턴
+    sql = `select b.*, c.name AS category_name,
+    (SELECT count(*) FROM likes where liked_book_id = b.id) as likes,
+    (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? and liked_book_id = b.id)) as liked
+    from books as b
+    left join category as c
+    on b.category_id = c.id
+    where b.id = ?`;
+    values = [authorization.userId, bookId];
+  }
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     if (results.length) {
