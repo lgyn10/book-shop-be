@@ -1,10 +1,19 @@
 // const conn = require('data/mariadb');
+const jwt = require('jsonwebtoken'); // jwt 모듈 소환
 const mysql = require('mysql2/promise');
 const { StatusCodes } = require('http-status-codes'); // http-status-codes 라이브러리
 require('dotenv').config(); // .env 파일 사용
 
+const { ensureAuthorization } = require('util/index');
+
 //! 결제하기 = 주문등록 = 데이터베이스 주문 insert
 const order = async (req, res) => {
+  const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
+  }
+
   // 비동기 전처리
   const conn = await mysql.createConnection({
     host: 'localhost',
@@ -14,7 +23,7 @@ const order = async (req, res) => {
     dateStrings: true, // 변경해줘야 time_zone 설정이 적용된 시간을 얻을 수 있다.
   });
 
-  const { items, delivery, totalPrice, totalQuantity, userId, representBookTitle } = req.body;
+  const { items, delivery, totalPrice, totalQuantity, representBookTitle } = req.body;
 
   //| 1. delivery 테이블 삽입
   const sql1 = `INSERT INTO delivery (address, receiver, contact) 
@@ -27,7 +36,7 @@ const order = async (req, res) => {
   //| 2. order 테이블 삽입
   const sql2 = `INSERT INTO orders (represent_book_title, total_quantity, total_price, user_id, delivery_id) 
     VALUES (?, ?, ?, ?, ?);`;
-  const values2 = [representBookTitle, totalPrice, totalQuantity, userId, delivery_id];
+  const values2 = [representBookTitle, totalPrice, totalQuantity, authorization.userId, delivery_id];
   [results] = await conn.execute(sql2, values2);
   const order_id = results.insertId;
 
@@ -42,7 +51,7 @@ const order = async (req, res) => {
   orderItems.forEach((item) => values3.push([order_id, item.book_id, item.quantity]));
   results = await conn.query(sql3, [values3]); // execute는 아직 다중 값을 sql을 받아올 수 없음
 
-  //| 4. cartItems 요소 삭제
+  //! 4. cartItems 요소 삭제
   const deleteCartItems = async (conn, items) => {
     const sql = `DELETE FROM cart_items WHERE id IN (?)`;
     let results = await conn.query(sql, [items]);
@@ -64,14 +73,17 @@ const getOrders = async (req, res) => {
     dateStrings: true, // 변경해줘야 time_zone 설정이 적용된 시간을 얻을 수 있다.
   });
 
-  const { userId } = req.body;
-  const parsedUserId = parseInt(userId, 10);
+  const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
+  }
 
   const sql = `SELECT o.*, d.address, d.receiver, d.contact FROM orders as o
   LEFT JOIN delivery as d
   ON o.delivery_id = d.id
   WHERE o.user_id = ?`;
-  const values = [parsedUserId];
+  const values = [authorization.userId];
 
   const [results] = await conn.query(sql, values);
   return res.status(StatusCodes.OK).json(results);
@@ -87,6 +99,12 @@ const getOrderDetail = async (req, res) => {
     database: 'BookShop',
     dateStrings: true, // 변경해줘야 time_zone 설정이 적용된 시간을 얻을 수 있다.
   });
+
+  const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
+  }
 
   const id = req.params.id;
   const parsedOrderId = parseInt(id, 10);
