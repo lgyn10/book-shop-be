@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken'); // jwt 모듈 소환
 const conn = require('data/mariadb');
 const { StatusCodes } = require('http-status-codes'); // http-status-codes 라이브러리
-require('dotenv').config(); // .env 파일 사용
 
 const { ensureAuthorization } = require('util/index');
 
@@ -58,9 +57,15 @@ const getCartItems = (req, res) => {
 
 //! 장바구니 도서 개별 삭제
 const deleteCartItem = (req, res) => {
+  const authorization = ensureAuthorization(req, res);
+  if (authorization instanceof jwt.JsonWebTokenError) {
+    if (authorization instanceof jwt.TokenExpiredError) return res.status(StatusCodes.UNAUTHORIZED).send(authorization);
+    else return res.status(StatusCodes.BAD_REQUEST).send(authorization);
+  }
+
   const { cartItemId } = req.params;
   const parsedCartItemId = parseInt(cartItemId, 10);
-  const sql = `DELETE FROM cart_items WHERE id = ?`;
+  const sql = `DELETE FROM cart_items WHERE id = ? and `;
   const values = [parsedCartItemId];
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
