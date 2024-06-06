@@ -1,9 +1,23 @@
 const conn = require('data/mariadb');
+const mysql = require('mysql2/promise');
 const { StatusCodes } = require('http-status-codes'); // http-status-codes 라이브러리
 require('dotenv').config(); // .env 파일 사용
+const { ensureAuthorization } = require('util/index');
+
+const { camelcase } = require('camelcase-input');
 
 //! 전체 도서 조회
-const allBooks = (req, res) => {
+const allBooks = async (req, res) => {
+  //| 페이지네이션 위한 totalCount 값 추출
+  // 비동기 전처리
+  const promiseConn = await mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: process.env.MYSQL_PRIVATE_KEY, // pwd 추가
+    database: 'BookShop',
+    dateStrings: true, // 변경해줘야 time_zone 설정이 적용된 시간을 얻을 수 있다.
+  });
+
   const { categoryId, news, limit, currentPage } = req.query; // 존재 안하면 [undefined]
   // limit : page 당 도서 수
   // currentPage : 현재 몇 페이지
@@ -19,10 +33,10 @@ const allBooks = (req, res) => {
   const parsedNews = JSON.parse(news ?? false);
 
   // 전체 조회
-  let sql = `select *, 
-  (SELECT count(*) FROM likes where liked_book_id = id) as likes,
-  (SELECT EXISTS (SELECT * FROM likes WHERE user_id = user_id and liked_book_id = id)) as liked
+  let sql = `select sql_calc_found_rows *, 
+  (SELECT count(*) FROM likes where liked_book_id = id) as likes
   from books`;
+  // (SELECT EXISTS (SELECT * FROM likes WHERE user_id = user_id and liked_book_id = id)) as liked
   let values = [];
 
   //| 조건 분기
@@ -46,15 +60,22 @@ const allBooks = (req, res) => {
     sql += ` limit ? offset ?`;
     values = [...values, parsedLimit, offset];
   }
+  const [rows1] = await promiseConn.execute(`SELECT count(*) as totalCount FROM BookShop.books;`);
 
-  conn.query(sql, values, (error, results) => {
-    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
-    if (results.length) {
-      return res.status(StatusCodes.OK).json(results);
-    } else {
-      return res.status(StatusCodes.NOT_FOUND).end();
-    }
-  });
+  const [rows2, fileds2] = await promiseConn.execute(sql, values);
+
+  if (rows2.length) {
+    const results = {
+      books: rows2,
+      pagination: {
+        currentPage: parsedCurPage,
+        totalCount: rows1[0].totalCount,
+      },
+    };
+    return res.status(StatusCodes.OK).json(camelcase(results, { deep: true }));
+  } else {
+    return res.status(StatusCodes.NOT_FOUND).json({ totalCount: rows1[0].totalCount }).end();
+  }
 };
 
 //! 개별 도서 조회 - 일단 로그인이 되었다는 가정이 전제함
