@@ -27,7 +27,7 @@ const allBooks = async (req, res) => {
   const parsedLimit = parseInt(limit, 10); // NaN or value
   const parsedCurPage = parseInt(currentPage, 10);
   const offset = parsedLimit * (parsedCurPage - 1);
-  const parsedcategoryId = parseInt(categoryId, 10);
+  const parsedCategoryId = parseInt(categoryId, 10);
 
   // news : string -> boolean 형 변환
   const parsedNews = JSON.parse(news ?? false);
@@ -42,14 +42,14 @@ const allBooks = async (req, res) => {
   //| 조건 분기
 
   //! 카테고리별 + 신간 도서 조회
-  if (parsedcategoryId && parsedNews) {
+  if (parsedCategoryId && parsedNews) {
     // sql문 더할 때, 공백 처리 필수
     sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
-    values = [...values, parsedcategoryId];
-  } else if (parsedcategoryId) {
+    values = [...values, parsedCategoryId];
+  } else if (parsedCategoryId) {
     //! 카테고리별 도서 조회
     sql += ` where category_id = ?`;
-    values = [...values, parsedcategoryId];
+    values = [...values, parsedCategoryId];
   } else if (parsedNews) {
     //! 신간 도서 조회
     sql += ` where pub_date
