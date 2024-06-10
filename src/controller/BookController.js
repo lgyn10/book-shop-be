@@ -33,7 +33,7 @@ const allBooks = async (req, res) => {
   const parsedNews = JSON.parse(news ?? false);
 
   // 전체 조회
-  let sql = `select sql_calc_found_rows *, 
+  let sql = `select SQL_CALC_FOUND_ROWS *, 
   (SELECT count(*) FROM likes where liked_book_id = id) as likes
   from books`;
   // (SELECT EXISTS (SELECT * FROM likes WHERE user_id = user_id and liked_book_id = id)) as liked
@@ -61,15 +61,18 @@ const allBooks = async (req, res) => {
     values = [...values, parsedLimit, offset];
   }
   const [rows1] = await promiseConn.execute(`SELECT count(*) as totalCount FROM BookShop.books;`);
+  console.log(rows1);
+  // const [rows1] = await promiseConn.execute(`SELECT FOUND_ROWS();`);
+  //console.log(rows1[0]['FOUND_ROWS()']);
 
   const [rows2, fileds2] = await promiseConn.execute(sql, values);
-
   if (rows2.length) {
     const results = {
       books: rows2,
       pagination: {
         currentPage: parsedCurPage,
         totalCount: rows1[0].totalCount,
+        //totalCount: rows1[0]['FOUND_ROWS()'],
       },
     };
     return res.status(StatusCodes.OK).json(camelcase(results, { deep: true }));
