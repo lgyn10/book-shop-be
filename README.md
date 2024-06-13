@@ -6,13 +6,23 @@
 
 ```
 📦src
+ ┣ 📂controller
+ ┃ ┣ 📜BookController.js
+ ┃ ┣ 📜CartController.js
+ ┃ ┣ 📜CategoryController.js
+ ┃ ┣ 📜LikeController.js
+ ┃ ┣ 📜OrderController.js
+ ┃ ┗ 📜UserController.js
  ┣ 📂data
  ┃ ┗ 📜mariadb.js
  ┣ 📂routes
  ┃ ┣ 📜books.js
  ┃ ┣ 📜carts.js
+ ┃ ┣ 📜category.js
  ┃ ┣ 📜likes.js
  ┃ ┣ 📜orders.js
  ┃ ┗ 📜users.js
+ ┣ 📂util
+ ┃ ┗ 📜index.js
  ┗ 📜app.js
 ```
