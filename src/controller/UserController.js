@@ -51,7 +51,7 @@ const login = (req, res) => {
       // 쿠키 발행
       res.cookie('token', token, { httpOnly: true });
 
-      res.status(StatusCodes.OK).json({ message: `${loginUser.email}님, 로그인에 성공했습니다.` });
+      // res.status(StatusCodes.OK).json({ message: `${loginUser.email}님, 로그인에 성공했습니다.` });
       console.log(token); // token 확인
       //! FE수업에서 추가된 코드
       // body에 token을 담아서 보내줌
