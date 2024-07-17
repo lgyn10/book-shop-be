@@ -29,8 +29,7 @@ const allBooks = async (req, res) => {
   const offset = parsedLimit * (parsedCurPage - 1);
   const parsedCategoryId = parseInt(categoryId, 10);
 
-  // news : string -> boolean 형 변환
-  const parsedNews = JSON.parse(news ?? false);
+  const parsedNews = news === 'true' ? true : false;
 
   // 전체 조회
   let sql = `select SQL_CALC_FOUND_ROWS *, 
