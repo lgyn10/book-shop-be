@@ -45,7 +45,7 @@ const allBooks = async (req, res) => {
     // sql문 더할 때, 공백 처리 필수
     sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
     values = [...values, parsedCategoryId];
-  } else if (parsedCategoryId) {
+  } else if (parsedCategoryId === 0 || parsedCategoryId) {
     //! 카테고리별 도서 조회
     sql += ` where category_id = ?`;
     values = [...values, parsedCategoryId];
