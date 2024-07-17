@@ -41,7 +41,7 @@ const allBooks = async (req, res) => {
   //| 조건 분기
 
   //! 카테고리별 + 신간 도서 조회
-  if (parsedCategoryId && parsedNews) {
+  if ((parsedCategoryId === 0 || parsedCategoryId) && parsedNews) {
     // sql문 더할 때, 공백 처리 필수
     sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
     values = [...values, parsedCategoryId];
@@ -59,6 +59,7 @@ const allBooks = async (req, res) => {
     sql += ` limit ? offset ?`;
     values = [...values, parsedLimit, offset];
   }
+  //! 페이지 네이션이 먼저 작동하면 안됨...
   const [rows1] = await promiseConn.execute(`SELECT count(*) as totalCount FROM BookShop.books;`);
   console.log(rows1);
   // const [rows1] = await promiseConn.execute(`SELECT FOUND_ROWS();`);
