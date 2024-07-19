@@ -113,7 +113,8 @@ const bookDetail = (req, res) => {
   conn.query(sql, values, (error, results) => {
     if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
     if (results.length) {
-      return res.status(StatusCodes.OK).json(results);
+      // results는 배열이므로, 첫번째 요소를 반환
+      return res.status(StatusCodes.OK).json(results[0]);
     } else {
       return res.status(StatusCodes.NOT_FOUND).end();
     }
