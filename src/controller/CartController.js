@@ -65,10 +65,13 @@ const deleteCartItem = (req, res) => {
 
   const { cartItemId } = req.params;
   const parsedCartItemId = parseInt(cartItemId, 10);
-  const sql = `DELETE FROM cart_items WHERE id = ? and `;
+  const sql = `DELETE FROM cart_items WHERE id = ?`;
   const values = [parsedCartItemId];
   conn.query(sql, values, (error, results) => {
-    if (error) return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    if (error) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    }
+    console.log(`${parsedCartItemId}가 삭제되었습니다.`);
     return res.status(StatusCodes.OK).json(results);
   });
 };
