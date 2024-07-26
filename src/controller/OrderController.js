@@ -24,6 +24,7 @@ const order = async (req, res) => {
   });
 
   const { items, delivery, totalPrice, totalQuantity, representBookTitle } = req.body;
+  console.log(req.body);
 
   //| 1. delivery 테이블 삽입
   const sql1 = `INSERT INTO delivery (address, receiver, contact) 
