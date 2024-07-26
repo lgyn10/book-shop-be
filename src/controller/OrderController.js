@@ -37,7 +37,7 @@ const order = async (req, res) => {
   //| 2. order 테이블 삽입
   const sql2 = `INSERT INTO orders (represent_book_title, total_quantity, total_price, user_id, delivery_id) 
     VALUES (?, ?, ?, ?, ?);`;
-  const values2 = [representBookTitle, totalPrice, totalQuantity, authorization.userId, delivery_id];
+  const values2 = [representBookTitle, totalQuantity, totalPrice, authorization.userId, delivery_id];
   [results] = await conn.execute(sql2, values2);
   const order_id = results.insertId;
 
